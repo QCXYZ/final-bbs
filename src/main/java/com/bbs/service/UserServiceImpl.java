@@ -22,19 +22,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User assignRoleToUser(Long userId, Long roleId) {
-        User user = userRepository.findById(userId).orElse(null);
-        Role role = roleRepository.findById(roleId).orElse(null);
-        if (user != null && role != null) {
-            user.setRole(role);
-            userRepository.save(user);
-        }
-        return user;
+    public List<User> findAllUsers() {
+        return userRepository.findAll();
+    }
+
+    public User getUser(User user) {
+        return userRepository.findByUsernameAndPassword(user.getUsername(), user.getPassword())
+                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
     }
 
     @Override
-    public List<User> findAllUsers() {
-        return userRepository.findAll();
+    public User assignRoleToUser(Long userId, Long roleId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+        user.setRole(role);
+        userRepository.save(user);
+        return user;
     }
 
 }

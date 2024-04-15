@@ -15,9 +15,14 @@ public class UserController {
     @Resource
     private UserServiceImpl userService;
 
-    @PostMapping
-    public User createUser(@RequestBody User user) {
+    @PostMapping("/register")
+    public User register(@RequestBody User user) {
         return userService.saveUser(user);
+    }
+
+    @PostMapping("/login")
+    public User login(@RequestBody User user) {
+        return userService.getUser(user);
     }
 
 }
