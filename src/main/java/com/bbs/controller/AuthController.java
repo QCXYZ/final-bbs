@@ -1,8 +1,13 @@
 package com.bbs.controller;
 
+import com.bbs.entity.PasswordResetToken;
 import com.bbs.entity.User;
+import com.bbs.repository.PasswordResetTokenRepository;
+import com.bbs.repository.UserRepository;
+import com.bbs.service.EmailService;
 import com.bbs.service.UserService;
 import com.bbs.util.JwtTokenUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -25,6 +31,12 @@ public class AuthController {
     private AuthenticationManager authenticationManager;
     @Resource
     private JwtTokenUtil jwtTokenUtil;
+    @Autowired
+    private EmailService emailService;
+    @Resource
+    private UserRepository userRepository;
+    @Resource
+    private PasswordResetTokenRepository passwordResetTokenRepository;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
@@ -43,17 +55,28 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> requestBody) {
-        if (!userService.checkUserExistsByEmail(requestBody.get("email"))) {
-            return ResponseEntity.status(404).body(Map.of("error", "请输入注册时的邮箱."));
-        }
-        // 发送密码重置链接的逻辑在这里
-        return ResponseEntity.ok(Map.of("message", "密码重置链接已发送至您的邮箱."));
+        User user = userRepository.findByEmail(requestBody.get("email"))
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + requestBody.get("email")));
+
+        String token = UUID.randomUUID().toString();
+        userService.createPasswordResetTokenForUser(user, token);
+        emailService.sendSimpleMessage(user.getEmail(), "Reset Password", "Here is your password reset token: " + token);
+
+        return ResponseEntity.ok(Map.of("message", "Password reset link sent to your email."));
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> requestBody) {
-        // 假设令牌验证逻辑已在其他地方实现
-        userService.updateUserPassword(requestBody.get("email"), requestBody.get("newPassword"));
-        return ResponseEntity.ok(Map.of("message", "密码已成功重置."));
+        String token = requestBody.get("token");
+        if (!userService.validatePasswordResetToken(token)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid or expired reset token."));
+        }
+
+        User user = passwordResetTokenRepository.findByToken(token)
+                .map(PasswordResetToken::getUser)
+                .orElseThrow(() -> new RuntimeException("Invalid token"));
+
+        userService.updateUserPassword(user.getEmail(), requestBody.get("newPassword"));
+        return ResponseEntity.ok(Map.of("message", "Password has been reset successfully."));
     }
 }

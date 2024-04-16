@@ -1,7 +1,8 @@
 package com.bbs.service;
 
+import com.bbs.entity.PasswordResetToken;
 import com.bbs.entity.User;
-import com.bbs.repository.RoleRepository;
+import com.bbs.repository.PasswordResetTokenRepository;
 import com.bbs.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -10,16 +11,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Optional;
 
 @Service
 public class UserService implements UserDetailsService {
     @Resource
     private UserRepository userRepository;
     @Resource
-    private RoleRepository roleRepository;
-    @Resource
     private PasswordEncoder passwordEncoder;
+    @Resource
+    private PasswordResetTokenRepository passwordResetTokenRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -49,5 +52,18 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new RuntimeException("未找到邮箱为：" + email + " 的用户"));
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    public void createPasswordResetTokenForUser(final User user, final String token) {
+        final PasswordResetToken myToken = new PasswordResetToken();
+        myToken.setToken(token);
+        myToken.setUser(user);
+        myToken.setExpiryDate(LocalDateTime.now().plusHours(2)); // 令牌有效期为2小时
+        passwordResetTokenRepository.save(myToken);
+    }
+
+    public boolean validatePasswordResetToken(String token) {
+        final Optional<PasswordResetToken> passToken = passwordResetTokenRepository.findByToken(token);
+        return passToken.isPresent() && passToken.get().getExpiryDate().isAfter(LocalDateTime.now());
     }
 }
