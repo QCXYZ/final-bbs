@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Collections;
@@ -69,6 +70,28 @@ public class UserService implements UserDetailsService {
         user.setResetToken(null);
         user.setResetTokenExpiryDate(null);
         userRepository.save(user);
+    }
+
+    // 用户资料模块
+    @Transactional(readOnly = true)
+    public User getUserProfile(Long userId) {
+        return userRepository.findById(userId).orElse(null);
+    }
+
+    @Transactional
+    public void updateUserProfile(Long userId, User updatedUser) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            user.setAvatar(updatedUser.getAvatar());
+            user.setNickname(updatedUser.getNickname());
+            user.setSignature(updatedUser.getSignature());
+            userRepository.save(user);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElse(null);
     }
 
 }
