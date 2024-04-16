@@ -1,8 +1,6 @@
 package com.bbs.service;
 
-import com.bbs.entity.PasswordResetToken;
 import com.bbs.entity.User;
-import com.bbs.repository.PasswordResetTokenRepository;
 import com.bbs.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -11,9 +9,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -22,7 +21,18 @@ public class UserService implements UserDetailsService {
     @Resource
     private PasswordEncoder passwordEncoder;
     @Resource
-    private PasswordResetTokenRepository passwordResetTokenRepository;
+    private EmailService emailService;
+
+    public void registerUser(User user) {
+        // 检查用户是否已存在
+        if (userRepository.existsByUsernameOrEmail(user.getUsername(), user.getEmail())) {
+            throw new RuntimeException("用户名或邮箱已存在.");
+        }
+        // 加密密码
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // 保存用户
+        userRepository.save(user);
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -32,38 +42,33 @@ public class UserService implements UserDetailsService {
                 user.getUsername(), user.getPassword(), Collections.emptyList());
     }
 
-    public User registerUser(User user) {
-        // 检查用户是否已存在
-        if (userRepository.existsByUsernameOrEmail(user.getUsername(), user.getEmail())) {
-            throw new RuntimeException("用户名或邮箱已存在.");
-        }
-        // 加密密码
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        // 保存用户
-        return userRepository.save(user);
-    }
-
-    public boolean checkUserExistsByEmail(String email) {
-        return userRepository.existsByEmail(email);
-    }
-
-    public void updateUserPassword(String email, String newPassword) {
+    public void generateResetTokenAndSendEmail(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("未找到邮箱为：" + email + " 的用户"));
+                .orElseThrow(() -> new RuntimeException("Email not found."));
+        String token = UUID.randomUUID().toString();
+        user.setResetToken(token);
+        // 设置令牌过期时间为1小时后
+        user.setResetTokenExpiryDate(new Date(System.currentTimeMillis() + 3600 * 1000));
+        userRepository.save(user);
+        emailService.sendResetTokenEmail(email, token);
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        Optional<User> userOptional = userRepository.findByResetToken(token);
+        if (userOptional.isEmpty()) {
+            throw new RuntimeException("Invalid or expired reset token.");
+        }
+        User user = userOptional.get();
+        // 检查令牌是否过期
+        if (new Date().after(user.getResetTokenExpiryDate())) {
+            throw new RuntimeException("Invalid or expired reset token.");
+        }
+        // 重置密码
         user.setPassword(passwordEncoder.encode(newPassword));
+        // 清除令牌
+        user.setResetToken(null);
+        user.setResetTokenExpiryDate(null);
         userRepository.save(user);
     }
 
-    public void createPasswordResetTokenForUser(final User user, final String token) {
-        final PasswordResetToken myToken = new PasswordResetToken();
-        myToken.setToken(token);
-        myToken.setUser(user);
-        myToken.setExpiryDate(LocalDateTime.now().plusHours(2)); // 令牌有效期为2小时
-        passwordResetTokenRepository.save(myToken);
-    }
-
-    public boolean validatePasswordResetToken(String token) {
-        final Optional<PasswordResetToken> passToken = passwordResetTokenRepository.findByToken(token);
-        return passToken.isPresent() && passToken.get().getExpiryDate().isAfter(LocalDateTime.now());
-    }
 }

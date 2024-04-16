@@ -25,22 +25,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 
     @Bean
-    public JwtAuthenticationTokenFilter authenticationTokenFilterBean() {
-        return new JwtAuthenticationTokenFilter();
+    public JwtFilter jwtFilterBean() {
+        return new JwtFilter();
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .csrf().disable()
+                .csrf().disable()  // 禁用CSRF保护
                 .authorizeRequests()
-                .antMatchers("/api/auth/**").permitAll()
-                .antMatchers("/api/admin/**").hasRole("ADMIN")
-                .anyRequest().authenticated()
+                .antMatchers("/api/auth/**").hasRole("ADMIN")  // 仅ADMIN角色可以访问
+                .antMatchers("/**").permitAll() // 必须放在最后，其他所有请求都放行
+                .anyRequest().authenticated()  // 所有其他请求需要认证
                 .and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 会话策略设置为无状态
                 .and()
-                .addFilterBefore(authenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtFilterBean(), UsernamePasswordAuthenticationFilter.class); // 添加JWT认证过滤器
     }
 
 

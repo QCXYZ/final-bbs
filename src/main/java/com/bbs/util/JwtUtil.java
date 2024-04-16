@@ -11,10 +11,10 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 
 @Component
-public class JwtTokenUtil {
+public class JwtUtil {
     private final SecretKey secretKey;
 
-    public JwtTokenUtil() {
+    public JwtUtil() {
         this.secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
     }
 

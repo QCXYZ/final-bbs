@@ -1,6 +1,6 @@
 package com.bbs.auth;
 
-import com.bbs.util.JwtTokenUtil;
+import com.bbs.util.JwtUtil;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,11 +15,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
+public class JwtFilter extends OncePerRequestFilter {
     @Resource
     private UserDetailsService userDetailsService;
     @Resource
-    private JwtTokenUtil jwtTokenUtil;
+    private JwtUtil jwtUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -29,12 +29,12 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         if (authToken != null && authToken.startsWith("Bearer ")) {
             authToken = authToken.substring(7);
 
-            String username = jwtTokenUtil.getUsernameFromToken(authToken);
+            String username = jwtUtil.getUsernameFromToken(authToken);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-                if (jwtTokenUtil.validateToken(authToken)) {
+                if (jwtUtil.validateToken(authToken)) {
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

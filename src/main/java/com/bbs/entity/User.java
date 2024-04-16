@@ -3,6 +3,7 @@ package com.bbs.entity;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Data
 @Entity
@@ -26,4 +27,9 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role = new Role(2L, "USER");
+
+    @Column
+    private String resetToken;
+    @Column
+    private Date resetTokenExpiryDate;
 }
