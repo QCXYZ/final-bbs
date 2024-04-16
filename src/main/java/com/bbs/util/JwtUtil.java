@@ -20,7 +20,7 @@ public class JwtUtil {
 
     public String generateToken(UserDetails userDetails) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + 1000L * 3600 * 24 * 30); // Corrected to milliseconds
+        Date expiryDate = new Date(now.getTime() + 1000L * 3600 * 24 * 30);
 
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
@@ -47,7 +47,7 @@ public class JwtUtil {
                     .parseClaimsJws(authToken);
             return true;
         } catch (Exception e) {
-            // Log the exception
+            // 异常日志
         }
         return false;
     }
