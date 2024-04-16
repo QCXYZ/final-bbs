@@ -34,7 +34,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .csrf().disable()  // 禁用CSRF保护
                 .authorizeRequests()
-                .antMatchers("/api/auth/**").hasRole("ADMIN")  // 仅ADMIN角色可以访问
+                .antMatchers("/api/admin/**").hasRole("ADMIN")  // 仅ADMIN角色可以访问
                 .antMatchers("/**").permitAll() // 必须放在最后，其他所有请求都放行
                 .anyRequest().authenticated()  // 所有其他请求需要认证
                 .and()
