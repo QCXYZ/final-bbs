@@ -27,7 +27,7 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role = new Role(2L, "USER");
-
+    // 以下两个字段是重置密码用的
     @Column
     private String resetToken;
     @Column
