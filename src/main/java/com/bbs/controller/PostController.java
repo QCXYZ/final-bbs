@@ -8,6 +8,7 @@ import com.bbs.util.JwtUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -103,6 +104,7 @@ public class PostController {
         return new ResponseEntity<>(Map.of("message", "Media uploaded successfully"), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     // 设置帖子审核开关
     @PutMapping("/review/switch")
     public ResponseEntity<?> setReviewSwitch(@RequestBody Map<String, Boolean> payload,

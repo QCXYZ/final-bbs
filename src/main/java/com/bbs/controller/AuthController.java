@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,7 +36,10 @@ public class AuthController {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(requestBody.get("username"), requestBody.get("password"))
         );
-        final String token = JwtUtil.generateToken((UserDetails) authentication.getPrincipal());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        UserDetails userDetails = userService.loadUserByUsername(requestBody.get("username"));
+        final String token = JwtUtil.generateToken(userDetails);
         return ResponseEntity.ok(Map.of("token", token, "message", "登录成功."));
     }
 

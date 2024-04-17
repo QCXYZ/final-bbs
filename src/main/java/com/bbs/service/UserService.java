@@ -2,6 +2,7 @@ package com.bbs.service;
 
 import com.bbs.entity.User;
 import com.bbs.repository.UserRepository;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -40,7 +41,7 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findByUsername(username).orElseThrow(()
                 -> new UsernameNotFoundException("未找到用户名为：" + username + " 的用户"));
         return new org.springframework.security.core.userdetails.User(
-                user.getUsername(), user.getPassword(), Collections.emptyList());
+                user.getUsername(), user.getPassword(), Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName())));
     }
 
     public void generateResetTokenAndSendEmail(String email) {
