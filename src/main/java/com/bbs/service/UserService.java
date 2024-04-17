@@ -75,7 +75,7 @@ public class UserService implements UserDetailsService {
     // 用户资料模块
     @Transactional(readOnly = true)
     public User getUserProfile(Long userId) {
-        return userRepository.findById(userId).orElse(null);
+        return userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found."));
     }
 
     @Transactional

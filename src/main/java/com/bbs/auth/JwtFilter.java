@@ -18,8 +18,6 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
     @Resource
     private UserDetailsService userDetailsService;
-    @Resource
-    private JwtUtil jwtUtil;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -29,12 +27,12 @@ public class JwtFilter extends OncePerRequestFilter {
         if (authToken != null && authToken.startsWith("Bearer ")) {
             authToken = authToken.substring(7);
 
-            String username = jwtUtil.getUsernameFromToken(authToken);
+            String username = JwtUtil.getUsernameFromToken(authToken);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-                if (jwtUtil.validateToken(authToken)) {
+                if (JwtUtil.validateToken(authToken)) {
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

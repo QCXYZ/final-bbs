@@ -23,8 +23,6 @@ public class AuthController {
     private UserService userService;
     @Resource
     private AuthenticationManager authenticationManager;
-    @Resource
-    private JwtUtil jwtUtil;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
@@ -37,7 +35,7 @@ public class AuthController {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(requestBody.get("username"), requestBody.get("password"))
         );
-        final String token = jwtUtil.generateToken((UserDetails) authentication.getPrincipal());
+        final String token = JwtUtil.generateToken((UserDetails) authentication.getPrincipal());
         return ResponseEntity.ok(Map.of("token", token, "message", "登录成功."));
     }
 
