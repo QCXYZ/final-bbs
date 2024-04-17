@@ -79,4 +79,5 @@ public class PostService {
         post.setReviewed(approved);
         postRepository.save(post);
     }
+
 }

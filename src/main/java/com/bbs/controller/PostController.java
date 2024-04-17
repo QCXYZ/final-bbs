@@ -30,9 +30,12 @@ public class PostController {
     private ConfigurationService configurationService;
 
     // 发布帖子
+//    @PreAuthorize("authenticated") 请求参数中已经包含了用户信息，无需再次验证
     @PostMapping
-    public ResponseEntity<?> createPost(@RequestBody Post post, @RequestHeader("Authorization") String token) {
-        String username = JwtUtil.getUsername(token.substring(7));
+    public ResponseEntity<?> createPost(
+            @RequestBody Post post,
+            @RequestHeader("Authorization") String jwt) {
+        String username = JwtUtil.getUsername(jwt);
         postService.createPost(username, post);
         return new ResponseEntity<>(Map.of("message", "Post created successfully"), HttpStatus.CREATED);
     }
@@ -50,12 +53,11 @@ public class PostController {
     }
 
     // 管理员获取所有未审核的帖子
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/unreviewed")
     public ResponseEntity<?> getAllUnreviewedPosts(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int limit,
-            @RequestHeader("Authorization") String adminToken) {
-        // 这里应该验证管理员权限
+            @RequestParam(defaultValue = "10") int limit) {
         Page<Post> posts = postService.getAllUnreviewedPosts(page - 1, limit);
         Map<String, Object> response = new HashMap<>();
         response.put("total", posts.getTotalElements());
@@ -71,27 +73,29 @@ public class PostController {
     }
 
     // 编辑帖子
+    @PreAuthorize("authenticated")
     @PutMapping("/{postId}")
-    public ResponseEntity<?> updatePost(@PathVariable Long postId, @RequestBody Map<String, String> updates, @RequestHeader("Authorization") String token) {
-        JwtUtil.getUsername(token.substring(7));
+    public ResponseEntity<?> updatePost(
+            @PathVariable Long postId,
+            @RequestBody Map<String, String> updates) {
         postService.updatePost(postId, updates.get("title"), updates.get("content"));
         return new ResponseEntity<>(Map.of("message", "Post updated successfully"), HttpStatus.OK);
     }
 
     // 删除帖子
+    @PreAuthorize("authenticated")
     @DeleteMapping("/{postId}")
-    public ResponseEntity<?> deletePost(@PathVariable Long postId, @RequestHeader("Authorization") String token) {
-        JwtUtil.getUsername(token.substring(7));
+    public ResponseEntity<?> deletePost(@PathVariable Long postId) {
         postService.deletePost(postId);
         return new ResponseEntity<>(Map.of("message", "Post deleted successfully"), HttpStatus.OK);
     }
 
     // 上传帖子的媒体文件
+    @PreAuthorize("authenticated")
     @PostMapping("/{postId}/media")
-    public ResponseEntity<?> uploadMedia(@PathVariable Long postId,
-                                         @RequestParam("media") MultipartFile[] files,
-                                         @RequestHeader("Authorization") String token) throws IOException {
-        JwtUtil.getUsername(token.substring(7));
+    public ResponseEntity<?> uploadMedia(
+            @PathVariable Long postId,
+            @RequestParam("media") MultipartFile[] files) throws IOException {
         List<String> mediaUrls = new ArrayList<>();
 
         for (MultipartFile file : files) {
@@ -104,22 +108,20 @@ public class PostController {
         return new ResponseEntity<>(Map.of("message", "Media uploaded successfully"), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     // 设置帖子审核开关
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/review/switch")
-    public ResponseEntity<?> setReviewSwitch(@RequestBody Map<String, Boolean> payload,
-                                             @RequestHeader("Authorization") String adminToken) {
-        // 这里应该验证管理员权限
+    public ResponseEntity<?> setReviewSwitch(@RequestBody Map<String, Boolean> payload) {
         configurationService.setReviewSwitch(payload.get("enabled"));
         return new ResponseEntity<>(Map.of("message", "Post review switch updated successfully"), HttpStatus.OK);
     }
 
     // 审核帖子
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{postId}/review")
-    public ResponseEntity<?> reviewPost(@PathVariable Long postId,
-                                        @RequestBody Map<String, Boolean> payload,
-                                        @RequestHeader("Authorization") String adminToken) {
-        // 验证管理员权限
+    public ResponseEntity<?> reviewPost(
+            @PathVariable Long postId,
+            @RequestBody Map<String, Boolean> payload) {
         postService.setPostReview(postId, payload.get("approved"));
         return new ResponseEntity<>(Map.of("message", "Post reviewed successfully"), HttpStatus.OK);
     }

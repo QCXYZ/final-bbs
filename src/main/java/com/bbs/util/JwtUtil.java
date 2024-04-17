@@ -4,12 +4,14 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
 
+@Slf4j
 @Component
 public class JwtUtil {
     private static final SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
@@ -34,16 +36,19 @@ public class JwtUtil {
                     .parseClaimsJws(authToken);
             return true;
         } catch (Exception e) {
-            // 异常日志
+            log.error("无效的JWT令牌: {}", e.getMessage());
         }
         return false;
     }
 
-    public static String getUsername(String token) {
+    public static String getUsername(String jwt) {
+        if (jwt != null && jwt.startsWith("Bearer ")) {
+            jwt = jwt.substring(7); // 去除 "Bearer " 前缀
+        }
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(secretKey)
                 .build()
-                .parseClaimsJws(token)
+                .parseClaimsJws(jwt)
                 .getBody();
         return claims.getSubject();
     }
