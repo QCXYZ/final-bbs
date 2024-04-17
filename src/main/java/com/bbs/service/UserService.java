@@ -74,24 +74,17 @@ public class UserService implements UserDetailsService {
 
     // 用户资料模块
     @Transactional(readOnly = true)
-    public User getUserProfile(Long userId) {
-        return userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found."));
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found."));
     }
 
     @Transactional
-    public void updateUserProfile(Long userId, User updatedUser) {
-        User user = userRepository.findById(userId).orElse(null);
-        if (user != null) {
-            user.setAvatar(updatedUser.getAvatar());
-            user.setNickname(updatedUser.getNickname());
-            user.setSignature(updatedUser.getSignature());
-            userRepository.save(user);
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public User findByUsername(String username) {
-        return userRepository.findByUsername(username).orElse(null);
+    public void updateUserByIdAndUpdatedUser(Long userId, User updatedUser) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found."));
+        user.setAvatar(updatedUser.getAvatar());
+        user.setNickname(updatedUser.getNickname());
+        user.setSignature(updatedUser.getSignature());
+        userRepository.save(user);
     }
 
 }
