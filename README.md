@@ -281,23 +281,20 @@
       PUT /api/posts/1/review HTTP/1.1
       Host: example.com
       Content-Type: application/json
-      Authorization: Bearer {adminToken
+      Authorization: Bearer {adminToken}
+      
+      {
+        "approved": true
+      }
       ```
 
-}
+    - **响应示例：**
 
-     {
-       "approved": true
-     }
-     ```
-
-- **响应示例：**
-
-  ```json
-  {
-    "message": "Post reviewed successfully"
-  }
-  ```
+      ```json
+      {
+        "message": "Post reviewed successfully"
+      }
+      ```
 
 ### 互动交流模块
 

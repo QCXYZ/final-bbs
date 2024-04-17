@@ -29,6 +29,8 @@ public class Post {
     private LocalDateTime createdAt;
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+    @Column
+    private Boolean reviewed = false; // 默认未审核
 
     @PrePersist
     protected void onCreate() {
