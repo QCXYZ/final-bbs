@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.persistence.EntityNotFoundException;
@@ -83,14 +84,20 @@ public class PostService {
     }
 
     // 删除帖子
+//    @Transactional 不用加这个注解，因为在service层，调用了repository的delete或save方法，这些方法已经加了这个注解
+    @Transactional // 但是如果是多个delete或save，必须加这个注解，否则会报错(报错原因是因为存在多个事务，而事务的传播行为默认是REQUIRED，所以会报错)
+    // 事务的传播行为：REQUIRED：如果当前没有事务，就新建一个事务，如果已经存在一个事务中，加入到这个事务中
     public void deletePost(Long postId, HttpServletRequest request) {
         User user = jwtUtil.getCurrentUser(request);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        if (!post.getUser().getId().equals(user.getId())) {
+        if (!post.getUser().getId().equals(user.getId()) &&
+                !user.getRole().getName().equals("ADMIN")) {
             throw new AccessDeniedException("Access denied");
         }
 
+        commentRepository.deleteByPostId(postId);
+        favoriteRepository.deleteByPostId(postId);
         postRepository.delete(post);
     }
 
