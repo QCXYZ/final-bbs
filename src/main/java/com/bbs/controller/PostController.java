@@ -1,5 +1,6 @@
 package com.bbs.controller;
 
+import com.bbs.entity.Comment;
 import com.bbs.entity.Post;
 import com.bbs.service.ConfigurationService;
 import com.bbs.service.MediaService;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -124,6 +126,35 @@ public class PostController {
             @RequestBody Map<String, Boolean> payload) {
         postService.setPostReview(postId, payload.get("approved"));
         return new ResponseEntity<>(Map.of("message", "Post reviewed successfully"), HttpStatus.OK);
+    }
+
+
+    // 互动交流模块
+//    @PreAuthorize("authenticated")
+    @PostMapping("/{postId}/comments")
+    public ResponseEntity<?> addComment(HttpServletRequest request, @PathVariable Long postId, @RequestBody Comment comment) {
+        return postService.addComment(request, postId, comment);
+    }
+
+    @DeleteMapping("/{postId}/comments/{commentId}")
+    public ResponseEntity<?> deleteComment(@PathVariable Long postId, @PathVariable Long commentId) {
+        return postService.deleteComment(postId, commentId);
+    }
+
+    @PostMapping("/{postId}/like")
+    public ResponseEntity<?> likePost(@PathVariable Long postId) {
+        System.out.println("postId: " + postId);
+        return postService.likePost(postId);
+    }
+
+    @PostMapping("/{postId}/favorite")
+    public ResponseEntity<?> favoritePost(HttpServletRequest request, @PathVariable Long postId) {
+        return postService.favoritePost(request, postId);
+    }
+
+    @DeleteMapping("/{postId}/favorite")
+    public ResponseEntity<?> unfavoritePost(@PathVariable Long postId) {
+        return postService.unfavoritePost(postId);
     }
 
 }

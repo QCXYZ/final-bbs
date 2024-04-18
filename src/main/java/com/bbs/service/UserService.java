@@ -73,9 +73,10 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
+
     // 用户资料模块
     @Transactional(readOnly = true)
-    public User getUserByUsername(String username) {
+    public User getUser(String username) {
         return userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found."));
     }
 

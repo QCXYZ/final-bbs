@@ -15,7 +15,7 @@ public class UserUtil {
             if (JwtUtil.validateToken(token)) {
                 String username = JwtUtil.getUsername(token);
                 // 现在我们有了用户名，需要查询数据库以获取用户ID
-                User user = userService.getUserByUsername(username);
+                User user = userService.getUser(username);
                 return user.getId(); // 返回用户ID
             }
         }

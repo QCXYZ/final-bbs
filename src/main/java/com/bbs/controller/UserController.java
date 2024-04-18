@@ -19,7 +19,7 @@ public class UserController {
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile(@RequestHeader("Authorization") String token) {
         String username = JwtUtil.getUsername(token);
-        User user = userService.getUserByUsername(username);
+        User user = userService.getUser(username);
         return ResponseEntity.ok(Map.of(
                 "id", user.getId(),
                 "email", user.getEmail(),
@@ -32,7 +32,7 @@ public class UserController {
     @PutMapping("/profile")
     public ResponseEntity<?> updateUserProfile(@RequestHeader("Authorization") String token, @RequestBody User updatedUser) {
         String username = JwtUtil.getUsername(token);
-        Long userId = userService.getUserByUsername(username).getId();
+        Long userId = userService.getUser(username).getId();
         userService.updateUserByIdAndUpdatedUser(userId, updatedUser);
         return ResponseEntity.ok(new MessageResponse("Profile updated successfully"));
     }
