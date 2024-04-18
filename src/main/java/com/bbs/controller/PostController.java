@@ -75,20 +75,20 @@ public class PostController {
     }
 
     // 编辑帖子
-    @PreAuthorize("authenticated")
+//    @PreAuthorize("authenticated")
     @PutMapping("/{postId}")
     public ResponseEntity<?> updatePost(
             @PathVariable Long postId,
-            @RequestBody Map<String, String> updates) {
-        postService.updatePost(postId, updates.get("title"), updates.get("content"));
+            @RequestBody Map<String, String> updates, HttpServletRequest request) {
+        postService.updatePost(postId, updates.get("title"), updates.get("content"), request);
         return new ResponseEntity<>(Map.of("message", "Post updated successfully"), HttpStatus.OK);
     }
 
     // 删除帖子
-    @PreAuthorize("authenticated")
+//    @PreAuthorize("authenticated")
     @DeleteMapping("/{postId}")
-    public ResponseEntity<?> deletePost(@PathVariable Long postId) {
-        postService.deletePost(postId);
+    public ResponseEntity<?> deletePost(@PathVariable Long postId, HttpServletRequest request) {
+        postService.deletePost(postId, request);
         return new ResponseEntity<>(Map.of("message", "Post deleted successfully"), HttpStatus.OK);
     }
 

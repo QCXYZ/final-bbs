@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -38,16 +39,6 @@ public class PostService {
     @Resource
     private JwtUtil jwtUtil;
 
-    // 发布帖子
-    public void createPost(String username, Post post) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        post.setUser(user);
-        post.setCreatedAt(LocalDateTime.now());
-        post.setUpdatedAt(LocalDateTime.now());
-        postRepository.save(post);
-    }
-
     // 获取所有已审核的帖子
     public Page<Post> getAllReviewedPosts(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -66,10 +57,25 @@ public class PostService {
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
     }
 
+    // 发布帖子
+    public void createPost(String username, Post post) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        post.setUser(user);
+        post.setCreatedAt(LocalDateTime.now());
+        post.setUpdatedAt(LocalDateTime.now());
+        postRepository.save(post);
+    }
+
     // 编辑帖子
-    public void updatePost(Long postId, String title, String content) {
+    public void updatePost(Long postId, String title, String content, HttpServletRequest request) {
+        User user = jwtUtil.getCurrentUser(request);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+        if (!post.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("Access denied");
+        }
+
         post.setTitle(title);
         post.setContent(content);
         post.setUpdatedAt(LocalDateTime.now());
@@ -77,9 +83,14 @@ public class PostService {
     }
 
     // 删除帖子
-    public void deletePost(Long postId) {
+    public void deletePost(Long postId, HttpServletRequest request) {
+        User user = jwtUtil.getCurrentUser(request);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+        if (!post.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("Access denied");
+        }
+
         postRepository.delete(post);
     }
 
@@ -102,6 +113,8 @@ public class PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
         User user = jwtUtil.getCurrentUser(request);
+//        userRepository.findById(user.getId())
+//                .orElseThrow(() -> new RuntimeException("User not found"));
         comment.setPost(post);
         comment.setUser(user);  // 设置用户
         commentRepository.save(comment);
