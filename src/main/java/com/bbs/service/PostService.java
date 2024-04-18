@@ -12,6 +12,7 @@ import com.bbs.util.JwtUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -107,52 +108,52 @@ public class PostService {
         return ResponseEntity.ok("Comment posted successfully");
     }
 
-    // 删除评论
-    public ResponseEntity<?> deleteComment(Long postId, Long commentId) {
-        Comment comment = commentRepository.findById(commentId).orElse(null);
-        if (comment == null || !comment.getPost().getId().equals(postId)) {
-            return ResponseEntity.badRequest().body("Comment not found");
+    // 删除自己的评论
+    public ResponseEntity<?> deleteComment(HttpServletRequest request, Long commentId) {
+        User user = jwtUtil.getCurrentUser(request);
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+        if (!comment.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only delete your own comments.");
         }
         commentRepository.delete(comment);
         return ResponseEntity.ok("Comment deleted successfully");
     }
 
-    // 点赞帖子
-    public ResponseEntity<?> likePost(Long postId) {
-        Post post = postRepository.findById(postId).orElse(null);
-        if (post == null) {
-            return ResponseEntity.badRequest().body("Post not found");
-        }
-//        post.setLikeCount(post.getLikeCount() + 1);
-        /*
-        int likeCount = post.getLikeCount() != null ? post.getLikeCount() : 0;
-        post.setLikeCount(likeCount + 1);
-        */
-        post.setLikeCount(Optional.ofNullable(post.getLikeCount()).orElse(0) + 1);
-        postRepository.save(post);
-        return ResponseEntity.ok("Post liked successfully");
-    }
-
-    // 收藏帖子
-    public ResponseEntity<?> favoritePost(HttpServletRequest request, Long postId) {
+    // 点赞/取消点赞帖子
+    public ResponseEntity<?> likePost(HttpServletRequest request, Long postId) {
+        User user = jwtUtil.getCurrentUser(request);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
-        User user = jwtUtil.getCurrentUser(request);
-        Favorite favorite = new Favorite();
-        favorite.setPost(post);
-        favorite.setUser(user);  // 设置用户
-        favoriteRepository.save(favorite);
-        return ResponseEntity.ok("Post favorited successfully");
+        if (post.getLikes().contains(user)) {
+            post.getLikes().remove(user);
+            post.setLikeCount(Optional.ofNullable(post.getLikeCount()).orElse(0) - 1);
+            postRepository.save(post);
+            return ResponseEntity.ok("Post unliked successfully");
+        } else {
+            post.getLikes().add(user);
+            post.setLikeCount(Optional.ofNullable(post.getLikeCount()).orElse(0) + 1);
+            postRepository.save(post);
+            return ResponseEntity.ok("Post liked successfully");
+        }
     }
 
-    // 取消收藏帖子
-    public ResponseEntity<?> unfavoritePost(Long postId) {
-        Favorite favorite = favoriteRepository.findByPostId(postId).orElse(null);
-        if (favorite == null) {
-            return ResponseEntity.badRequest().body("Post not favorited yet");
+    // 收藏/取消收藏帖子
+    public ResponseEntity<?> favoritePost(HttpServletRequest request, Long postId) {
+        User user = jwtUtil.getCurrentUser(request);
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+        Favorite favorite = favoriteRepository.findByUserIdAndPostId(user.getId(), postId);
+        if (favorite != null) {
+            favoriteRepository.delete(favorite);
+            return ResponseEntity.ok("Post unfavorited successfully");
+        } else {
+            Favorite newFavorite = new Favorite();
+            newFavorite.setPost(post);
+            newFavorite.setUser(user);
+            favoriteRepository.save(newFavorite);
+            return ResponseEntity.ok("Post favorited successfully");
         }
-        favoriteRepository.delete(favorite);
-        return ResponseEntity.ok("Post unfavorited successfully");
     }
 
 }

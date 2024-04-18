@@ -136,25 +136,19 @@ public class PostController {
         return postService.addComment(request, postId, comment);
     }
 
-    @DeleteMapping("/{postId}/comments/{commentId}")
-    public ResponseEntity<?> deleteComment(@PathVariable Long postId, @PathVariable Long commentId) {
-        return postService.deleteComment(postId, commentId);
+    @DeleteMapping("/comments/{commentId}")
+    public ResponseEntity<?> deleteComment(HttpServletRequest request, @PathVariable Long commentId) {
+        return postService.deleteComment(request, commentId);
     }
 
     @PostMapping("/{postId}/like")
-    public ResponseEntity<?> likePost(@PathVariable Long postId) {
-        System.out.println("postId: " + postId);
-        return postService.likePost(postId);
+    public ResponseEntity<?> likePost(HttpServletRequest request, @PathVariable Long postId) {
+        return postService.likePost(request, postId);
     }
 
     @PostMapping("/{postId}/favorite")
     public ResponseEntity<?> favoritePost(HttpServletRequest request, @PathVariable Long postId) {
         return postService.favoritePost(request, postId);
-    }
-
-    @DeleteMapping("/{postId}/favorite")
-    public ResponseEntity<?> unfavoritePost(@PathVariable Long postId) {
-        return postService.unfavoritePost(postId);
     }
 
 }
