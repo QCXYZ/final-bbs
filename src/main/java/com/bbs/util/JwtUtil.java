@@ -1,7 +1,5 @@
 package com.bbs.util;
 
-import com.bbs.entity.User;
-import com.bbs.service.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -10,17 +8,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import javax.crypto.SecretKey;
-import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 
 @Slf4j
 @Component
 public class JwtUtil {
     private static final SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
-    @Resource
-    private UserService userService;
 
     public static String generateToken(UserDetails userDetails) {
         Date now = new Date();
@@ -57,11 +51,5 @@ public class JwtUtil {
                 .parseClaimsJws(jwt)
                 .getBody();
         return claims.getSubject();
-    }
-
-    public User getCurrentUser(HttpServletRequest request) {
-        String jwt = request.getHeader("Authorization");
-        String username = getUsername(jwt);
-        return userService.getUser(username);
     }
 }

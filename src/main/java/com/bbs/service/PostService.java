@@ -8,7 +8,7 @@ import com.bbs.repository.CommentRepository;
 import com.bbs.repository.FavoriteRepository;
 import com.bbs.repository.PostRepository;
 import com.bbs.repository.UserRepository;
-import com.bbs.util.JwtUtil;
+import com.bbs.util.UserUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,7 +38,7 @@ public class PostService {
     @Resource
     private FavoriteRepository favoriteRepository;
     @Resource
-    private JwtUtil jwtUtil;
+    private UserUtil userUtil;
 
     // 获取所有已审核的帖子
     public Page<Post> getAllReviewedPosts(int page, int size) {
@@ -70,7 +70,7 @@ public class PostService {
 
     // 编辑帖子
     public void updatePost(Long postId, String title, String content, HttpServletRequest request) {
-        User user = jwtUtil.getCurrentUser(request);
+        User user = userUtil.getCurrentUser(request);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
         if (!post.getUser().getId().equals(user.getId())) {
@@ -88,7 +88,7 @@ public class PostService {
     @Transactional // 但是如果是多个delete或save，必须加这个注解，否则会报错(报错原因是因为存在多个事务，而事务的传播行为默认是REQUIRED，所以会报错)
     // 事务的传播行为：REQUIRED：如果当前没有事务，就新建一个事务，如果已经存在一个事务中，加入到这个事务中
     public void deletePost(Long postId, HttpServletRequest request) {
-        User user = jwtUtil.getCurrentUser(request);
+        User user = userUtil.getCurrentUser(request);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
         if (!post.getUser().getId().equals(user.getId()) &&
@@ -119,7 +119,7 @@ public class PostService {
     public ResponseEntity<?> addComment(HttpServletRequest request, Long postId, Comment comment) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
-        User user = jwtUtil.getCurrentUser(request);
+        User user = userUtil.getCurrentUser(request);
 //        userRepository.findById(user.getId())
 //                .orElseThrow(() -> new RuntimeException("User not found"));
         comment.setPost(post);
@@ -130,7 +130,7 @@ public class PostService {
 
     // 删除自己的评论
     public ResponseEntity<?> deleteComment(HttpServletRequest request, Long commentId) {
-        User user = jwtUtil.getCurrentUser(request);
+        User user = userUtil.getCurrentUser(request);
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
         if (!comment.getUser().getId().equals(user.getId())) {
@@ -142,7 +142,7 @@ public class PostService {
 
     // 点赞/取消点赞帖子
     public ResponseEntity<?> likePost(HttpServletRequest request, Long postId) {
-        User user = jwtUtil.getCurrentUser(request);
+        User user = userUtil.getCurrentUser(request);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
         if (post.getLikes().contains(user)) {
@@ -160,7 +160,7 @@ public class PostService {
 
     // 收藏/取消收藏帖子
     public ResponseEntity<?> favoritePost(HttpServletRequest request, Long postId) {
-        User user = jwtUtil.getCurrentUser(request);
+        User user = userUtil.getCurrentUser(request);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
         Favorite favorite = favoriteRepository.findByUserIdAndPostId(user.getId(), postId);
