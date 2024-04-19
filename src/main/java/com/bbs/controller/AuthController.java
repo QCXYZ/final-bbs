@@ -33,28 +33,26 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody Map<String, String> requestBody) {
-        Authentication authentication = authenticationManager.authenticate(
+        Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(requestBody.get("username"), requestBody.get("password"))
         );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
         UserDetails userDetails = userService.loadUserByUsername(requestBody.get("username"));
-        final String token = JwtUtil.generateToken(userDetails);
-        return ResponseEntity.ok(Map.of("token", token, "message", "登录成功."));
+        return ResponseEntity.ok(Map.of(
+                "token", JwtUtil.generateToken(userDetails),
+                "message", "登录成功."));
     }
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> requestBody) {
-        String email = requestBody.get("email");
-        userService.generateResetTokenAndSendEmail(email);
+        userService.generateResetTokenAndSendEmail(requestBody.get("email"));
         return ResponseEntity.ok(Map.of("message", "密码重置链接已发送到您的邮箱。"));
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> requestBody) {
-        String token = requestBody.get("token");
-        String newPassword = requestBody.get("newPassword");
-        userService.resetPassword(token, newPassword);
+        userService.resetPassword(requestBody.get("token"), requestBody.get("newPassword"));
         return ResponseEntity.ok(Map.of("message", "密码已成功重置。"));
     }
 

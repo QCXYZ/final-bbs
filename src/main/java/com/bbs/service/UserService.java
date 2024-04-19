@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -38,11 +37,14 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username).orElseThrow(()
-                -> new UsernameNotFoundException("未找到用户名为：" + username + " 的用户"));
+        User user = getUser(username);
         return new org.springframework.security.core.userdetails.User(
-                user.getUsername(), user.getPassword(), Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName())));
+                user.getUsername(),
+                user.getPassword(),
+                Collections.singletonList(
+                        new SimpleGrantedAuthority("ROLE_" + user.getRole().getName())));
     }
+
 
     public void generateResetTokenAndSendEmail(String email) {
         User user = userRepository.findByEmail(email)
@@ -56,14 +58,11 @@ public class UserService implements UserDetailsService {
     }
 
     public void resetPassword(String token, String newPassword) {
-        Optional<User> userOptional = userRepository.findByResetToken(token);
-        if (userOptional.isEmpty()) {
-            throw new RuntimeException("Invalid or expired reset token.");
-        }
-        User user = userOptional.get();
+        User user = userRepository.findByResetToken(token)
+                .orElseThrow(() -> new RuntimeException("重置令牌无效。"));
         // 检查令牌是否过期
         if (new Date().after(user.getResetTokenExpiryDate())) {
-            throw new RuntimeException("Invalid or expired reset token.");
+            throw new RuntimeException("重置令牌已过期。");
         }
         // 重置密码
         user.setPassword(passwordEncoder.encode(newPassword));
