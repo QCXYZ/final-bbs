@@ -75,13 +75,12 @@ public class UserService implements UserDetailsService {
 
 
     // 用户资料模块
-    @Transactional(readOnly = true)
     public User getUser(String username) {
         return userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found."));
     }
 
     @Transactional
-    public void updateUserByIdAndUpdatedUser(Long userId, User updatedUser) {
+    public void update(Long userId, User updatedUser) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found."));
         user.setAvatar(updatedUser.getAvatar());
         user.setNickname(updatedUser.getNickname());

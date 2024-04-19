@@ -14,8 +14,7 @@ public class UserUtil {
 
     public User getCurrentUser(HttpServletRequest request) {
         String jwt = request.getHeader("Authorization");
-        String username = JwtUtil.getUsername(jwt);
-        return userService.getUser(username);
+        return userService.getUser(JwtUtil.getUsername(jwt));
     }
 
     public Long getCurrentUserId(HttpServletRequest request) {

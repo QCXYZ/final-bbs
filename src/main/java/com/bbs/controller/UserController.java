@@ -3,11 +3,12 @@ package com.bbs.controller;
 import com.bbs.dto.MessageResponse;
 import com.bbs.entity.User;
 import com.bbs.service.UserService;
-import com.bbs.util.JwtUtil;
+import com.bbs.util.UserUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 @RestController
@@ -15,11 +16,12 @@ import java.util.Map;
 public class UserController {
     @Resource
     private UserService userService;
+    @Resource
+    private UserUtil userUtil;
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getUserProfile(@RequestHeader("Authorization") String token) {
-        String username = JwtUtil.getUsername(token);
-        User user = userService.getUser(username);
+    public ResponseEntity<?> getUserProfile(HttpServletRequest request) {
+        User user = userUtil.getCurrentUser(request);
         return ResponseEntity.ok(Map.of(
                 "id", user.getId(),
                 "email", user.getEmail(),
@@ -30,10 +32,8 @@ public class UserController {
     }
 
     @PutMapping("/profile")
-    public ResponseEntity<?> updateUserProfile(@RequestHeader("Authorization") String token, @RequestBody User updatedUser) {
-        String username = JwtUtil.getUsername(token);
-        Long userId = userService.getUser(username).getId();
-        userService.updateUserByIdAndUpdatedUser(userId, updatedUser);
+    public ResponseEntity<?> updateUserProfile(@RequestBody User updatedUser, HttpServletRequest request) {
+        userService.update(userUtil.getCurrentUserId(request), updatedUser);
         return ResponseEntity.ok(new MessageResponse("Profile updated successfully"));
     }
 
