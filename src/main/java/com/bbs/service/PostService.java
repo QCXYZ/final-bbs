@@ -7,7 +7,6 @@ import com.bbs.entity.User;
 import com.bbs.repository.CommentRepository;
 import com.bbs.repository.FavoriteRepository;
 import com.bbs.repository.PostRepository;
-import com.bbs.repository.UserRepository;
 import com.bbs.util.UserUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,7 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,8 +27,6 @@ import java.util.Optional;
 public class PostService {
     @Resource
     private PostRepository postRepository;
-    @Resource
-    private UserRepository userRepository;
     @Resource
     private ConfigurationService configurationService;
     @Resource
@@ -52,28 +48,24 @@ public class PostService {
         return postRepository.findAllByReviewed(false, pageable);
     }
 
+    // 发布帖子
+    public void createPost(HttpServletRequest request, Post post) {
+        post.setUser(userUtil.getCurrentUser(request));
+        post.setCreatedAt(LocalDateTime.now());
+        post.setUpdatedAt(LocalDateTime.now());
+        postRepository.save(post);
+    }
+
     // 获取帖子详情
     public Post getPost(Long postId) {
         return postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
     }
 
-    // 发布帖子
-    public void createPost(String username, Post post) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        post.setUser(user);
-        post.setCreatedAt(LocalDateTime.now());
-        post.setUpdatedAt(LocalDateTime.now());
-        postRepository.save(post);
-    }
-
     // 编辑帖子
     public void updatePost(Long postId, String title, String content, HttpServletRequest request) {
-        User user = userUtil.getCurrentUser(request);
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        if (!post.getUser().getId().equals(user.getId())) {
+        Post post = getPost(postId);
+        if (!post.getUser().getId().equals(userUtil.getCurrentUserId(request))) {
             throw new AccessDeniedException("Access denied");
         }
 
@@ -88,9 +80,8 @@ public class PostService {
     @Transactional // 但是如果是多个delete或save，必须加这个注解，否则会报错(报错原因是因为存在多个事务，而事务的传播行为默认是REQUIRED，所以会报错)
     // 事务的传播行为：REQUIRED：如果当前没有事务，就新建一个事务，如果已经存在一个事务中，加入到这个事务中
     public void deletePost(Long postId, HttpServletRequest request) {
+        Post post = getPost(postId);
         User user = userUtil.getCurrentUser(request);
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
         if (!post.getUser().getId().equals(user.getId()) &&
                 !user.getRole().getName().equals("ADMIN")) {
             throw new AccessDeniedException("Access denied");
@@ -107,8 +98,7 @@ public class PostService {
             throw new IllegalStateException("Review process is disabled.");
         }
 
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+        Post post = getPost(postId);
         post.setReviewed(approved);
         postRepository.save(post);
     }
@@ -117,23 +107,18 @@ public class PostService {
     // 互动交流模块
     // 添加评论
     public ResponseEntity<?> addComment(HttpServletRequest request, Long postId, Comment comment) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
-        User user = userUtil.getCurrentUser(request);
-//        userRepository.findById(user.getId())
-//                .orElseThrow(() -> new RuntimeException("User not found"));
+        Post post = getPost(postId);
         comment.setPost(post);
-        comment.setUser(user);  // 设置用户
+        comment.setUser(userUtil.getCurrentUser(request));  // 设置用户
         commentRepository.save(comment);
         return ResponseEntity.ok("Comment posted successfully");
     }
 
     // 删除自己的评论
     public ResponseEntity<?> deleteComment(HttpServletRequest request, Long commentId) {
-        User user = userUtil.getCurrentUser(request);
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
-        if (!comment.getUser().getId().equals(user.getId())) {
+        if (!comment.getUser().getId().equals(userUtil.getCurrentUser(request).getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only delete your own comments.");
         }
         commentRepository.delete(comment);
@@ -142,38 +127,34 @@ public class PostService {
 
     // 点赞/取消点赞帖子
     public ResponseEntity<?> likePost(HttpServletRequest request, Long postId) {
+        Post post = getPost(postId);
         User user = userUtil.getCurrentUser(request);
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
         if (post.getLikes().contains(user)) {
             post.getLikes().remove(user);
             post.setLikeCount(Optional.ofNullable(post.getLikeCount()).orElse(0) - 1);
             postRepository.save(post);
             return ResponseEntity.ok("Post unliked successfully");
-        } else {
-            post.getLikes().add(user);
-            post.setLikeCount(Optional.ofNullable(post.getLikeCount()).orElse(0) + 1);
-            postRepository.save(post);
-            return ResponseEntity.ok("Post liked successfully");
         }
+        post.getLikes().add(user);
+        post.setLikeCount(Optional.ofNullable(post.getLikeCount()).orElse(0) + 1);
+        postRepository.save(post);
+        return ResponseEntity.ok("Post liked successfully");
     }
 
     // 收藏/取消收藏帖子
     public ResponseEntity<?> favoritePost(HttpServletRequest request, Long postId) {
+        Post post = getPost(postId);
         User user = userUtil.getCurrentUser(request);
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
         Favorite favorite = favoriteRepository.findByUserIdAndPostId(user.getId(), postId);
         if (favorite != null) {
             favoriteRepository.delete(favorite);
             return ResponseEntity.ok("Post unfavorited successfully");
-        } else {
-            Favorite newFavorite = new Favorite();
-            newFavorite.setPost(post);
-            newFavorite.setUser(user);
-            favoriteRepository.save(newFavorite);
-            return ResponseEntity.ok("Post favorited successfully");
         }
+        Favorite newFavorite = new Favorite();
+        newFavorite.setPost(post);
+        newFavorite.setUser(user);
+        favoriteRepository.save(newFavorite);
+        return ResponseEntity.ok("Post favorited successfully");
     }
 
 }

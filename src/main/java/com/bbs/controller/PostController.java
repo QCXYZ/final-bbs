@@ -5,7 +5,6 @@ import com.bbs.entity.Post;
 import com.bbs.service.ConfigurationService;
 import com.bbs.service.MediaService;
 import com.bbs.service.PostService;
-import com.bbs.util.JwtUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,19 +33,16 @@ public class PostController {
     // 发布帖子
 //    @PreAuthorize("authenticated") 请求参数中已经包含了用户信息，无需再次验证
     @PostMapping
-    public ResponseEntity<?> createPost(
-            @RequestBody Post post,
-            @RequestHeader("Authorization") String jwt) {
-        String username = JwtUtil.getUsername(jwt);
-        postService.createPost(username, post);
+    public ResponseEntity<?> createPost(@RequestBody Post post,
+                                        HttpServletRequest request) {
+        postService.createPost(request, post);
         return new ResponseEntity<>(Map.of("message", "Post created successfully"), HttpStatus.CREATED);
     }
 
     // 获取所有已审核的帖子
     @GetMapping("/reviewed")
-    public ResponseEntity<?> getAllReviewedPosts(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int limit) {
+    public ResponseEntity<?> getAllReviewedPosts(@RequestParam(defaultValue = "1") int page,
+                                                 @RequestParam(defaultValue = "10") int limit) {
         Page<Post> posts = postService.getAllReviewedPosts(page - 1, limit);
         Map<String, Object> response = new HashMap<>();
         response.put("total", posts.getTotalElements());
@@ -57,9 +53,8 @@ public class PostController {
     // 管理员获取所有未审核的帖子
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/unreviewed")
-    public ResponseEntity<?> getAllUnreviewedPosts(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int limit) {
+    public ResponseEntity<?> getAllUnreviewedPosts(@RequestParam(defaultValue = "1") int page,
+                                                   @RequestParam(defaultValue = "10") int limit) {
         Page<Post> posts = postService.getAllUnreviewedPosts(page - 1, limit);
         Map<String, Object> response = new HashMap<>();
         response.put("total", posts.getTotalElements());
@@ -77,9 +72,9 @@ public class PostController {
     // 编辑帖子
 //    @PreAuthorize("authenticated")
     @PutMapping("/{postId}")
-    public ResponseEntity<?> updatePost(
-            @PathVariable Long postId,
-            @RequestBody Map<String, String> updates, HttpServletRequest request) {
+    public ResponseEntity<?> updatePost(@PathVariable Long postId,
+                                        @RequestBody Map<String, String> updates,
+                                        HttpServletRequest request) {
         postService.updatePost(postId, updates.get("title"), updates.get("content"), request);
         return new ResponseEntity<>(Map.of("message", "Post updated successfully"), HttpStatus.OK);
     }
@@ -87,7 +82,8 @@ public class PostController {
     // 删除帖子
 //    @PreAuthorize("authenticated")
     @DeleteMapping("/{postId}")
-    public ResponseEntity<?> deletePost(@PathVariable Long postId, HttpServletRequest request) {
+    public ResponseEntity<?> deletePost(@PathVariable Long postId,
+                                        HttpServletRequest request) {
         postService.deletePost(postId, request);
         return new ResponseEntity<>(Map.of("message", "Post deleted successfully"), HttpStatus.OK);
     }
@@ -95,11 +91,9 @@ public class PostController {
     // 上传帖子的媒体文件
     @PreAuthorize("authenticated")
     @PostMapping("/{postId}/media")
-    public ResponseEntity<?> uploadMedia(
-            @PathVariable Long postId,
-            @RequestParam("media") MultipartFile[] files) throws IOException {
+    public ResponseEntity<?> uploadMedia(@PathVariable Long postId,
+                                         @RequestParam("media") MultipartFile[] files) throws IOException {
         List<String> mediaUrls = new ArrayList<>();
-
         for (MultipartFile file : files) {
             String fileUrl = mediaService.saveFile(file);
             mediaUrls.add(fileUrl);
@@ -121,9 +115,8 @@ public class PostController {
     // 审核帖子
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{postId}/review")
-    public ResponseEntity<?> reviewPost(
-            @PathVariable Long postId,
-            @RequestBody Map<String, Boolean> payload) {
+    public ResponseEntity<?> reviewPost(@PathVariable Long postId,
+                                        @RequestBody Map<String, Boolean> payload) {
         postService.setPostReview(postId, payload.get("approved"));
         return new ResponseEntity<>(Map.of("message", "Post reviewed successfully"), HttpStatus.OK);
     }
@@ -132,22 +125,27 @@ public class PostController {
     // 互动交流模块
 //    @PreAuthorize("authenticated")
     @PostMapping("/{postId}/comments")
-    public ResponseEntity<?> addComment(HttpServletRequest request, @PathVariable Long postId, @RequestBody Comment comment) {
+    public ResponseEntity<?> addComment(HttpServletRequest request,
+                                        @PathVariable Long postId,
+                                        @RequestBody Comment comment) {
         return postService.addComment(request, postId, comment);
     }
 
     @DeleteMapping("/comments/{commentId}")
-    public ResponseEntity<?> deleteComment(HttpServletRequest request, @PathVariable Long commentId) {
+    public ResponseEntity<?> deleteComment(HttpServletRequest request,
+                                           @PathVariable Long commentId) {
         return postService.deleteComment(request, commentId);
     }
 
     @PostMapping("/{postId}/like")
-    public ResponseEntity<?> likePost(HttpServletRequest request, @PathVariable Long postId) {
+    public ResponseEntity<?> likePost(HttpServletRequest request,
+                                      @PathVariable Long postId) {
         return postService.likePost(request, postId);
     }
 
     @PostMapping("/{postId}/favorite")
-    public ResponseEntity<?> favoritePost(HttpServletRequest request, @PathVariable Long postId) {
+    public ResponseEntity<?> favoritePost(HttpServletRequest request,
+                                          @PathVariable Long postId) {
         return postService.favoritePost(request, postId);
     }
 
