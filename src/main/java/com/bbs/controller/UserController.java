@@ -1,6 +1,5 @@
 package com.bbs.controller;
 
-import com.bbs.dto.MessageResponse;
 import com.bbs.entity.User;
 import com.bbs.service.UserService;
 import com.bbs.util.UserUtil;
@@ -34,7 +33,7 @@ public class UserController {
     @PutMapping("/profile")
     public ResponseEntity<?> updateUserProfile(@RequestBody User updatedUser, HttpServletRequest request) {
         userService.update(userUtil.getCurrentUserId(request), updatedUser);
-        return ResponseEntity.ok(new MessageResponse("Profile updated successfully"));
+        return ResponseEntity.ok(null);
     }
 
 }

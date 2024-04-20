@@ -1,5 +1,6 @@
 package com.bbs.controller;
 
+import com.bbs.aop.LogAnnotation;
 import com.bbs.entity.Comment;
 import com.bbs.entity.Post;
 import com.bbs.service.ConfigurationService;
@@ -39,7 +40,10 @@ public class PostController {
         return new ResponseEntity<>(Map.of("message", "Post created successfully"), HttpStatus.CREATED);
     }
 
-    // 获取所有已审核的帖子
+    // Spring AOP 在运行时为 PostController 类创建一个代理对象，这个代理对象拦截了
+    // getAllReviewedPosts() 方法的调用，
+    // 并在调用该方法前执行 LogAspect 类中定义的 logAround() 方法
+    @LogAnnotation("获取所有已审核的帖子")
     @GetMapping("/reviewed")
     public ResponseEntity<?> getAllReviewedPosts(@RequestParam(defaultValue = "1") int page,
                                                  @RequestParam(defaultValue = "10") int limit) {
