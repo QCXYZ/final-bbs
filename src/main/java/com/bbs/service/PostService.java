@@ -106,55 +106,52 @@ public class PostService {
 
     // 互动交流模块
     // 添加评论
-    public ResponseEntity<?> addComment(HttpServletRequest request, Long postId, Comment comment) {
+    public void addComment(HttpServletRequest request, Long postId, Comment comment) {
         Post post = getPost(postId);
         comment.setPost(post);
         comment.setUser(userUtil.getCurrentUser(request));  // 设置用户
         commentRepository.save(comment);
-        return ResponseEntity.ok("Comment posted successfully");
     }
 
     // 删除自己的评论
-    public ResponseEntity<?> deleteComment(HttpServletRequest request, Long commentId) {
+    public void deleteComment(HttpServletRequest request, Long commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
         if (!comment.getUser().getId().equals(userUtil.getCurrentUser(request).getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only delete your own comments.");
+            ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only delete your own comments.");
+            return;
         }
         commentRepository.delete(comment);
-        return ResponseEntity.ok("Comment deleted successfully");
     }
 
     // 点赞/取消点赞帖子
-    public ResponseEntity<?> likePost(HttpServletRequest request, Long postId) {
+    public void likePost(HttpServletRequest request, Long postId) {
         Post post = getPost(postId);
         User user = userUtil.getCurrentUser(request);
         if (post.getLikes().contains(user)) {
             post.getLikes().remove(user);
             post.setLikeCount(Optional.ofNullable(post.getLikeCount()).orElse(0) - 1);
             postRepository.save(post);
-            return ResponseEntity.ok("Post unliked successfully");
+            return;
         }
         post.getLikes().add(user);
         post.setLikeCount(Optional.ofNullable(post.getLikeCount()).orElse(0) + 1);
         postRepository.save(post);
-        return ResponseEntity.ok("Post liked successfully");
     }
 
     // 收藏/取消收藏帖子
-    public ResponseEntity<?> favoritePost(HttpServletRequest request, Long postId) {
+    public void favoritePost(HttpServletRequest request, Long postId) {
         Post post = getPost(postId);
         User user = userUtil.getCurrentUser(request);
         Favorite favorite = favoriteRepository.findByUserIdAndPostId(user.getId(), postId);
         if (favorite != null) {
             favoriteRepository.delete(favorite);
-            return ResponseEntity.ok("Post unfavorited successfully");
+            return;
         }
         Favorite newFavorite = new Favorite();
         newFavorite.setPost(post);
         newFavorite.setUser(user);
         favoriteRepository.save(newFavorite);
-        return ResponseEntity.ok("Post favorited successfully");
     }
 
 }

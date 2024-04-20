@@ -28,7 +28,7 @@ public class AuthController {
     @PostMapping("/register")
     public R<?> registerUser(@RequestBody User user) {
         userService.registerUser(user);
-        return R.ok(Map.of("message", "用户注册成功."));
+        return R.ok(null);
     }
 
     @PostMapping("/login")
@@ -39,21 +39,19 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         UserDetails userDetails = userService.loadUserByUsername(requestBody.get("username"));
-        return R.ok(Map.of(
-                "token", JwtUtil.generateToken(userDetails),
-                "message", "登录成功."));
+        return R.ok(JwtUtil.generateToken(userDetails));
     }
 
     @PostMapping("/forgot-password")
     public R<?> forgotPassword(@RequestBody Map<String, String> requestBody) {
         userService.generateResetTokenAndSendEmail(requestBody.get("email"));
-        return R.ok(Map.of("message", "密码重置链接已发送到您的邮箱。"));
+        return R.ok(null);
     }
 
     @PostMapping("/reset-password")
     public R<?> resetPassword(@RequestBody Map<String, String> requestBody) {
         userService.resetPassword(requestBody.get("token"), requestBody.get("newPassword"));
-        return R.ok(Map.of("message", "密码已成功重置。"));
+        return R.ok(null);
     }
 
 }

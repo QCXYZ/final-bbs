@@ -27,7 +27,8 @@ public class UserController {
                 "avatar", user.getAvatar(),
                 "nickname", user.getNickname(),
                 "signature", user.getSignature(),
-                "role", user.getRole().getName()));
+                "role", user.getRole().getName()
+        ));
     }
 
     @PutMapping("/profile")
