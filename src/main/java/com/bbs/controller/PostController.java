@@ -6,6 +6,7 @@ import com.bbs.entity.Post;
 import com.bbs.service.ConfigurationService;
 import com.bbs.service.MediaService;
 import com.bbs.service.PostService;
+import com.bbs.util.R;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,13 +46,13 @@ public class PostController {
     // 并在调用该方法前执行 LogAspect 类中定义的 logAround() 方法
     @LogAnnotation("获取所有已审核的帖子")
     @GetMapping("/reviewed")
-    public ResponseEntity<?> getAllReviewedPosts(@RequestParam(defaultValue = "1") int page,
-                                                 @RequestParam(defaultValue = "10") int limit) {
+    public R<?> getAllReviewedPosts(@RequestParam(defaultValue = "1") int page,
+                                    @RequestParam(defaultValue = "10") int limit) {
         Page<Post> posts = postService.getAllReviewedPosts(page - 1, limit);
         Map<String, Object> response = new HashMap<>();
         response.put("total", posts.getTotalElements());
         response.put("posts", posts.getContent());
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return R.ok(response);
     }
 
     // 管理员获取所有未审核的帖子
