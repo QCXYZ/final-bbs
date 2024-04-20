@@ -2,8 +2,8 @@ package com.bbs.controller;
 
 import com.bbs.entity.User;
 import com.bbs.service.UserService;
+import com.bbs.util.R;
 import com.bbs.util.UserUtil;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -19,9 +19,9 @@ public class UserController {
     private UserUtil userUtil;
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getUserProfile(HttpServletRequest request) {
+    public R<?> getUserProfile(HttpServletRequest request) {
         User user = userUtil.getCurrentUser(request);
-        return ResponseEntity.ok(Map.of(
+        return R.ok(Map.of(
                 "id", user.getId(),
                 "email", user.getEmail(),
                 "avatar", user.getAvatar(),
@@ -31,9 +31,9 @@ public class UserController {
     }
 
     @PutMapping("/profile")
-    public ResponseEntity<?> updateUserProfile(@RequestBody User updatedUser, HttpServletRequest request) {
+    public R<?> updateUserProfile(@RequestBody User updatedUser, HttpServletRequest request) {
         userService.update(userUtil.getCurrentUserId(request), updatedUser);
-        return ResponseEntity.ok(null);
+        return R.ok(null);
     }
 
 }
