@@ -1,5 +1,125 @@
 # 接口文档
 
+### 用户认证模块
+
+1. **用户注册接口**
+
+    - **请求方式：** POST
+
+    - **URL：** /api/auth/register
+
+    - **请求示例：**
+
+      ```http
+      POST /api/auth/register HTTP/1.1
+      Host: example.com
+      Content-Type: application/json
+      
+      {
+        "username": "newuser",
+        "password": "password123"
+        "email": "newuser@example.com",
+      }
+      ```
+
+    - **响应示例：**
+
+      ```json
+      {
+        "code": 200,
+        "message": "操作成功",
+        "data": null
+      }
+      ```
+
+2. **用户登录接口**
+
+    - **请求方式：** POST
+
+    - **URL：** /api/auth/login
+
+    - **请求示例：**
+
+      ```http
+      POST /api/auth/login HTTP/1.1
+      Host: example.com
+      Content-Type: application/json
+      
+      {
+        "username": "user123",
+        "password": "password123"
+      }
+      ```
+
+    - **响应示例：**
+
+      ```json
+      {
+        "code": 200,
+        "message": "操作成功",
+        "data": {
+          "token": "{jwt_token}"
+        }
+      }
+      ```
+
+3. **忘记密码接口**
+
+    - **请求方式：** POST
+
+    - **URL：** /api/auth/forgot-password
+
+    - **请求示例：**
+
+      ```http
+      POST /api/auth/forgot-password HTTP/1.1
+      Host: example.com
+      Content-Type: application/json
+      
+      {
+        "email": "user@example.com"
+      }
+      ```
+
+    - **响应示例：**
+
+      ```json
+      {
+        "code": 200,
+        "message": "操作成功",
+        "data": null
+      }
+      ```
+
+4. **重置密码接口**
+
+    - **请求方式：** POST
+
+    - **URL：** /api/auth/reset-password
+
+    - **请求示例：**
+
+      ```http
+      POST /api/auth/reset-password HTTP/1.1
+      Host: example.com
+      Content-Type: application/json
+      
+      {
+        "token": "{reset_token}",
+        "newPassword": "newpassword123"
+      }
+      ```
+
+    - **响应示例：**
+
+      ```json
+      {
+        "code": 200,
+        "message": "操作成功",
+        "data": null
+      }
+      ```
+
 ### 用户资料模块
 
 1. **查看个人资料接口**
