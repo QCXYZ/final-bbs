@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -51,8 +50,6 @@ public class PostService {
     // 发布帖子
     public void createPost(HttpServletRequest request, Post post) {
         post.setUser(userUtil.getCurrentUser(request));
-        post.setCreatedAt(LocalDateTime.now());
-        post.setUpdatedAt(LocalDateTime.now());
         postRepository.save(post);
     }
 
@@ -71,7 +68,6 @@ public class PostService {
 
         post.setTitle(title);
         post.setContent(content);
-        post.setUpdatedAt(LocalDateTime.now());
         postRepository.save(post);
     }
 
