@@ -139,13 +139,18 @@
     - **响应示例：**
 
       ```json
-      {
-        "id": 1,
-        "email": "user@example.com",
-        "avatar": "https://example.com/avatar.jpg",
-        "nickname": "User",
-        "signature": "Hello, world!"
-      }
+       {
+        "code": 200,
+        "message": "操作成功",
+          "data": {
+            "id": 1,
+            "email": "2339679990@qq.com",
+            "avatar": "1.png",
+            "nickname": "xxx",
+            "signature": "123",
+            "role": "ADMIN"
+          }
+       }
       ```
 
 2. **资料编辑接口**

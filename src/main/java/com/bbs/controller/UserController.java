@@ -11,6 +11,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
