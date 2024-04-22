@@ -37,7 +37,7 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         UserDetails userDetails = userService.loadUserByUsername(requestBody.get("username"));
-        return R.ok(JwtUtil.generateToken(userDetails));
+        return R.ok(Map.of("token", JwtUtil.generateToken(userDetails)));
     }
 
     @PostMapping("/forgot-password")
@@ -48,7 +48,7 @@ public class AuthController {
 
     @PostMapping("/reset-password")
     public R<?> resetPassword(@RequestBody Map<String, String> requestBody) {
-        userService.resetPassword(requestBody.get("token"), requestBody.get("newPassword"));
+        userService.resetPassword(requestBody.get("reset_token"), requestBody.get("newPassword"));
         return R.ok(null);
     }
 
