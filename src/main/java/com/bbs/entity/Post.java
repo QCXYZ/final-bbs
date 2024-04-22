@@ -31,9 +31,7 @@ public class Post {
     private LocalDateTime createdAt;
     @Column(nullable = false)
     private LocalDateTime updatedAt;
-    @Column
     private Boolean reviewed = false; // 默认未审核
-    @Column
     private Integer likeCount = 0; // 新增点赞计数字段
     @ManyToMany
     @JoinTable(

@@ -1,5 +1,6 @@
 package com.bbs.controller;
 
+import com.bbs.aop.LogAnnotation;
 import com.bbs.entity.User;
 import com.bbs.service.UserService;
 import com.bbs.util.R;
@@ -18,6 +19,7 @@ public class UserController {
     @Resource
     private UserUtil userUtil;
 
+    @LogAnnotation("获取用户信息")
     @GetMapping("/profile")
     public R<?> getUserProfile(HttpServletRequest request) {
         User user = userUtil.getCurrentUser(request);

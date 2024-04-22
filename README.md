@@ -141,7 +141,6 @@
       ```json
       {
         "id": 1,
-        "username": "user123",
         "email": "user@example.com",
         "avatar": "https://example.com/avatar.jpg",
         "nickname": "User",
@@ -156,6 +155,7 @@
     - **URL：** /api/user/profile
 
     - **请求示例：**
+    - 需要先请求"查看个人资料接口"来回显数据
 
       ```http
       PUT /api/user/profile HTTP/1.1
@@ -174,7 +174,9 @@
 
       ```json
       {
-        "message": "Profile updated successfully"
+        "code": 200,
+        "message": "操作成功",
+        "data": null
       }
       ```
 

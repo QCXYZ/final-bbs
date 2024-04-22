@@ -8,7 +8,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Collections;
@@ -78,7 +77,6 @@ public class UserService implements UserDetailsService {
         return userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found."));
     }
 
-    @Transactional
     public void update(Long userId, User updatedUser) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found."));
         user.setAvatar(updatedUser.getAvatar());
